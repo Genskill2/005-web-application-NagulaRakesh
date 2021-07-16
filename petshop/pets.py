@@ -22,12 +22,13 @@ def search(field, value):
     cursor = conn.cursor()
     oby = request.args.get("order_by", "id")
     order = request.args.get("order", "asc")
+    print(oby)
     if order == "asc":
-        cursor.execute(f"select p.id, p.name, p.bought, p.sold, s.name from pet p, animal s, tag tg, tags_pets tp where tg.name = ? and tp.pet = p.id and tp.tag = tg.id and p.species = s.id order by p.{oby}",[value])
+        cursor.execute(f"select p.id, p.name, p.bought, p.sold, s.name from pet p, animal s, tag tg, tags_pets tp where tg.name = ? and tp.pet = p.id and tp.tag = tg.id and p.species = s.id",[value])
     else:
         cursor.execute(f"select p.id, p.name, p.bought, p.sold, s.name from pet p, animal s, tag tg, tags_pets tp where tg.name = ? and tp.pet = p.id and tp.tag = tg.id and p.species = s.id order by p.{oby} desc",[value])
     pets = cursor.fetchall()
-    return render_template('search.html', pets = pets, field = field, value = value, order="desc" if order=="asc" else "asc")
+    return render_template('search.html', pets = pets, field = field, value = value, order=order)
 
 @bp.route("/")
 def dashboard():
@@ -85,11 +86,11 @@ def edit(pid):
         description = request.form.get('description')
         sold = request.form.get("sold")
         # TODO Handle sold
-        if sold:
-            cursor.execute("update pet set sold = ?, description = ? where id = ?",(datetime.datetime.date(datetime.datetime.now()), description, pid))
-        else:
-            cursor.execute("update pet set sold = ?, description = ? where id = ?",('', description, pid))
+        sold = datetime.date.today()
+        cursor.execute("update pet set description=? where id=?;",(description,pid))
+        cursor.execute("update pet set sold=? where id=?;",(sold,pid))
         conn.commit()
+        return redirect(url_for("pets.pet_info", pid=pid), 302)
         return redirect(url_for("pets.pet_info", pid=pid), 302)
         
     
